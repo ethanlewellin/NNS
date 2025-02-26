@@ -1,5 +1,15 @@
+"""""""""""""""""""""""""""""""""""
+Imports
+"""""""""""""""""""""""""""""""""""
+import numpy as np
+import matplotlib.pyplot as plt
 
-### Layers
+
+
+
+"""""""""""""""""""""""""""""""""""
+Layers
+"""""""""""""""""""""""""""""""""""
 
 #Dense Layer
 class Layer_Dense: #Completely Random Dense Layer
@@ -13,7 +23,9 @@ class Layer_Dense: #Completely Random Dense Layer
         self.output = np.dot(inputs, self.weights) + self.biases
         
 
-### Activation Functions
+"""""""""""""""""""""""""""""""""""
+Activation Functions
+"""""""""""""""""""""""""""""""""""
 
 #Relu Activation
 class Activation_ReLU:
@@ -30,7 +42,9 @@ class Activation_Softmax:
         
         self.output = probabilites
 
-### Loss Functions
+"""""""""""""""""""""""""""""""""""
+Loss Functions
+"""""""""""""""""""""""""""""""""""
 
 #Common Loss Class
 class Loss:
