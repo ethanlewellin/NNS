@@ -130,6 +130,7 @@ class Loss:
             regularization_loss += layer.weight_regularizer_l1 * np.sum(np.abs(layer.weights))
         
         # L2 regularization - weights
+        if layer.weight_regularizer_l2 > 0:
             regularization_loss += layer.weight_regularizer_l2 * np.sum(layer.weights * layer.weights)
             
         # L1 regularization - biases
