@@ -60,6 +60,28 @@ class Layer_Dense: #Completely Random Dense Layer
         
         # Gradient on values
         self.dinputs = np.dot(dvalues, self.weights.T)
+
+#Dropout layer
+class Layer_Dropout:
+    
+    # Init
+    def __init__(self, rate):
+        # Store rate, we invert it for use in the binomial distribution
+        self.rate = 1 - rate
+        
+    # Forward Pass
+    def forward(self, inputs):
+        # Save input values
+        self.inputs = inputs
+        # Generate and save scaled mask
+        self.binary_mask = np.random.binomial(1, self.rate, size = inputs.shape) / self.rate
+        # Apply mask to output values
+        self.output = inputs * self.binary_mask
+        
+    # Backward Pass
+    def backward(self, dvalues):
+        # Gradient on values
+        self.dinputs = dvalues * self.binary_mask
         
 
 """""""""""""""""""""""""""""""""""
@@ -67,6 +89,9 @@ Activation Functions
 """""""""""""""""""""""""""""""""""
 
 #Relu Activation
+## On/off linear function, easy to optimize
+## Most popular, the "go-to" function
+## Can cause dying neurons 
 class Activation_ReLU:
     
     # Forward Pass
@@ -81,6 +106,9 @@ class Activation_ReLU:
         self.dinputs[self.inputs <= 0] = 0
         
 #Softmax Activation 
+## Typically used in the last hidden layer
+## Calculates the probabilty distribution over 'n' different events
+## Dependant probabilites, sum of proabilites  = 1
 class Activation_Softmax:
     def forward(self, inputs):
         # Remember input values
@@ -104,6 +132,24 @@ class Activation_Softmax:
             jacobian_matrix = np.diagflat(single_output) - np.dot(single_output, single_output.T)
             #Calculate sample-wise gradient and add it to the array of sample gradients
             self.dinputs[index] = np.dot(jacobian_matrix, single_dvalues)
+            
+# Sigmoid Activation
+## Creates values between 0 and 1
+## Difficult optimization becuase it is not 0-centered  
+## Good for classification
+## Independant probabilities =, sum of probabilities not necessarily equal to 1
+class Activate_Sigmoid:
+    
+    #Forward Pass
+    def forward(self, inputs):
+        # Save input and calculate/save output of sigmoid function
+        self.inputs = inputs
+        self.output = 1/(1+np.exp(-inputs))
+            
+    # Backward pass
+    def backward(self, dvalues):
+        # Derivative - calculates from output of the sigmoid function
+        self.dinputs = dvalues * (1 - self.output) * self.output
 
 """""""""""""""""""""""""""""""""""
 Loss Functions
@@ -143,7 +189,7 @@ class Loss:
         
         return regularization_loss
     
-#Cross-entropy loss
+# Categorical Cross-entropy loss
 class Loss_CategoricalCrossentropy(Loss):
 
     #Forward Pass
@@ -192,6 +238,40 @@ class Loss_CategoricalCrossentropy(Loss):
         self.dinputs = - y_true / dvalues
         # Normalize gradient
         self.dinputs = self.dinputs / samples
+        
+# Binary Cross-entropy loss
+class Loss_BinaryCrossentropy(Loss):
+    
+    # Forward Pass
+    def forward(self, y_pred, y_true):
+        # Clip data to prevent division by 0
+        # Clip both sides to not drag mean towards any value
+        y_pred_clipped = np.clip(y_pred, 1e-7 , 1 - 1e-7 )
+        
+        # Calculate sample-wise loss
+        sample_losses = -(y_true * np.log(y_pred_clipped) +
+                          (1 - y_true) * np.log(1 - y_pred_clipped))
+        sample_losses = np.mean(sample_losses, axis=-1)
+
+        return sample_losses
+    
+    #Backward Pass
+    def backward(self, dvalues, y_true):
+        
+        # Number of samples
+        samples = len(dvalues)
+        # Number of outputs in every sample
+        outputs = len(dvalues[0])
+        
+        # Clip the data to prevent division by 0
+        clipped_dvalues = np.clip(dvalues, 1e-7 , 1 - 1e-7 )
+        
+        # Calculate gradient
+        self.dinputs = -(y_true / clipped_dvalues - 
+                        (1 - y_true) / (1 - clipped_dvalues)) / outputs
+        # Normailize gradient
+        self.dinputs = self.dinputs / samples
+    
         
         
 """""""""""""""""""""""""""""""""""
