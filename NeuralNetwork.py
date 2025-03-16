@@ -150,6 +150,22 @@ class Activate_Sigmoid:
     def backward(self, dvalues):
         # Derivative - calculates from output of the sigmoid function
         self.dinputs = dvalues * (1 - self.output) * self.output
+        
+    
+# Linear activation function
+# Most basic regression activation function    
+class Activation_Linear:
+    
+    # Forward pass
+    def forward(self, inputs):
+        # Just remember values
+        self.inputs = inputs
+        self.output = inputs
+        
+    # Backward Pass
+    def backward(self, dvalues):
+        # deriviative of linear function is 1
+        self.dinputs = dvalues.copy()
 
 """""""""""""""""""""""""""""""""""
 Loss Functions
@@ -272,7 +288,51 @@ class Loss_BinaryCrossentropy(Loss):
         # Normailize gradient
         self.dinputs = self.dinputs / samples
     
+   
+# Mean Squared Error (L2) Loss
+class Loss_MeanSquaredError(Loss): # L2 loss
+    
+    # Forward Pass
+    def forward(self, y_pred, y_true):
         
+        # Calculate loss
+        sample_losses = np.mean((y_true - y_pred)**2, axis=-1)
+        return sample_losses
+    
+    def backward(self, dvalues, y_true):
+        
+        # Number of Samples
+        samples = len(dvalues)
+        outputs = len(dvalues[0])
+        
+        #Gradient on values
+        self.dinputs = -2 * (y_true - dvalues) / outputs
+        # Normalize Gradient
+        self.dinputs = self.dinputs / samples
+        
+# Mean Absolute Error (L1) Loss        
+class Loss_MeanAbsoluteError(Loss): # L1 loss
+    
+    # Forward Pass
+    def forward(self, y_pred, y_true):
+        
+        # Calculate loss
+        sample_losses = np.mean(np.abs(y_true - y_pred), axis = -1)
+        
+        # Return losses
+        return sample_losses
+    
+    # Backward pass
+    def backward(self, dvalues, y_true):
+        
+        # Number of samples
+        samples = len(dvalues)
+        outputs = len(dvalues[0])
+        
+        # Calculate Gradient
+        self.dinputs = np.sign(y_true - dvalues) / outputs
+        # Normalize Gradient
+        self.dinputs = self.dinputs / samples
         
 """""""""""""""""""""""""""""""""""
 Combined Activation and Loss Functions
