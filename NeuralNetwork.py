@@ -814,7 +814,7 @@ class Model :
             
                 # Print a summary
                 if not step % print_every or step == train_steps - 1:
-                    print ( f'epoch: {step} , ' +
+                    print ( f'step: {step} , ' +
                             f'acc: {accuracy :.3f}, ' +
                             f'loss: {loss :.3f} (' +
                             f'data_loss: {data_loss :.3f} , ' +
