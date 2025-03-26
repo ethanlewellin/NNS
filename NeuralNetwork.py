@@ -3,7 +3,8 @@ Imports
 """""""""""""""""""""""""""""""""""
 import numpy as np
 import matplotlib.pyplot as plt
-
+import pickle
+import copy
 
 """""""""""""""""""""""""""""""""""
 Layers
@@ -63,6 +64,13 @@ class Layer_Dense: #Completely Random Dense Layer
         
         # Gradient on values
         self.dinputs = np.dot(dvalues, self.weights.T)
+    
+    def get_parameters(self):
+        return self.weights, self.biases
+    
+    def set_parameters(self, weights, biases):
+        self.weights = weights
+        self.biases = biases
 
 #Dropout layer
 class Layer_Dropout:
@@ -671,10 +679,16 @@ class Model :
         self.layers.append(layer)
         
     # Set loss, optimizer and accuracy
-    def set (self, *, loss, optimizer, accuracy):
-        self.loss = loss
-        self.optimizer = optimizer
-        self.accuracy = accuracy
+    def set(self , *, loss = None, optimizer = None, accuracy = None):
+        
+        if loss is not None:
+            self.loss = loss
+        
+        if optimizer is not None :
+            self.optimizer = optimizer
+        
+        if accuracy is not None :
+            self.accuracy = accuracy
         
     # Finalize the model
     def finalize (self):
@@ -719,9 +733,8 @@ class Model :
                 self.trainable_layers.append(self.layers[i])
                 
                 # Update loss object with trainable layers
-                self.loss.remember_trainable_layers(
-                    self.trainable_layers
-                    )
+                if self.loss is not None:
+                    self.loss.remember_trainable_layers(self.trainable_layers)
                 
                 
             # If output activation is Softmax and
@@ -842,7 +855,7 @@ class Model :
                 self.evaluate(*validation_data, batch_size=batch_size)
 
     # Performs forward pass
-    def forward ( self , X , training ):
+    def forward(self, X, training):
         
         # Call forward method on the input layer
         # this will set the output property that
@@ -859,7 +872,7 @@ class Model :
         return layer.output
     
     # Performs backward pass
-    def backward ( self , output , y ):
+    def backward(self, output, y):
         
         # If softmax classifier
         if self.softmax_classifier_output is not None :
@@ -892,7 +905,7 @@ class Model :
         for layer in reversed (self.layers):
             layer.backward(layer.next.dinputs)
             
-    def evaluate ( self , X_val , y_val , * , batch_size = None ):
+    def evaluate(self, X_val, y_val, *, batch_size = None):
         
         # Default value if batch size is not being set
         validation_steps = 1
@@ -941,6 +954,27 @@ class Model :
         print(f'validation, ' +
               f'acc: {validation_accuracy:.3f},' +
               f'loss: {validation_loss:.3f}')
+        
+    # Updates the model with new parameters
+    def set_parameters(self, parameters):
+        # Iterate over the parameters and layers
+        # and update each layers with each set of the parameters
+        for parameter_set, layer in zip(parameters, self.trainable_layers):
+            layer.set_parameters( * parameter_set)
+            
+    # Add this to Model class
+    # Retrieves and returns parameters of trainable layers
+    def get_parameters (self):
+        
+        # Create a list for parameters
+        parameters = []
+        
+        # Iterable trainable layers and get their parameters
+        for layer in self.trainable_layers:
+            parameters.append(layer.get_parameters())
+            
+        # Return a list
+        return parameters
             
 # Input "Layer"
 class Layer_Input:
@@ -1017,3 +1051,54 @@ class Accuracy_Categorical(Accuracy):
             y = np.argmax(y, axis = 1)
         return predictions == y
     
+"""""""""""""""""""""""""""""""""""
+Model Saving and Loading
+"""""""""""""""""""""""""""""""""""
+
+# Add save parameters function to model
+# Saves the parameters to a file
+def save_parameters(self, path):
+    
+    # Open a file in the binary-write mode and save parameters to it
+    with open (path, 'wb') as f:
+        pickle.dump(self.get_parameters(), f)
+        
+# Loads the weights and updates a model instance with them
+def load_parameters(self, path):
+    # Open file in the binary-read mode,
+    # load weights and update trainable layers
+    with open (path, 'rb' ) as f:
+        self.set_parameters(pickle.load(f))
+        
+def save(self, path):
+    
+    # Make a deep copy of current model instance
+    model = copy.deepcopy(self)
+    
+    # Reset accumulated values in loss and accuracy objects
+    model.loss.new_pass()
+    model.accuracy.new_pass()
+    
+    # Remove data from the input layer and gradients from the loss object
+    model.input_layer.__dict__.pop('output' , None)
+    model.loss.__dict__.pop('dinputs', None)
+    
+    # For each layer remove inputs, output and dinputs properties
+    for layer in model.layers:
+        for property in [ 'inputs', 'output', 'dinputs', 'dweights', 'dbiases']:
+            layer.__dict__.pop( property , None )
+    
+    # Open a file in the binary-write mode and save the model
+    with open (path, 'wb' ) as f:
+        pickle.dump(model, f)
+        
+# Loads and returns a model
+@staticmethod #create a model object without first needing to instantiate a model object
+def load(path):
+    
+    # Open file in the binary-read mode, load a model
+    with open (path, 'rb' ) as f:
+        model = pickle.load(f)
+        
+    # Return a model
+    return model
