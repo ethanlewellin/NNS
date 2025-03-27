@@ -936,15 +936,15 @@ class Model :
                     batch_X = X_val[step*batch_size:(step+1)*batch_size]
                     batch_y = y_val[step*batch_size:(step+1)*batch_size]
                  
-            # Perform the forward pass   
-            output = self.forward(batch_X, training=False)
-            
-            # Calculate the loss
-            self.loss.calculate(output, batch_y)
-            
-            # Get predictions and calculate an accuracy
-            predictions = self.output_layer_activation.predictions(output)
-            self.accuracy.calculate(predictions, batch_y)
+                # Perform the forward pass   
+                output = self.forward(batch_X, training=False)
+                
+                # Calculate the loss
+                self.loss.calculate(output, batch_y)
+                
+                # Get predictions and calculate an accuracy
+                predictions = self.output_layer_activation.predictions(output)
+                self.accuracy.calculate(predictions, batch_y)
             
         # Get and print validation loss and accuracy
         validation_loss = self.loss.calculate_accumulated()
@@ -1058,7 +1058,7 @@ class Accuracy:
         return accuracy
     
     # Calculates accumulated accuracy
-    def calculate_accumulated ( self ):
+    def calculate_accumulated(self):
         
         # Calculate an accuracy
         accuracy = self.accumulated_sum / self.accumulated_count
