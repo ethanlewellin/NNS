@@ -975,6 +975,55 @@ class Model :
             
         # Return a list
         return parameters
+    
+    
+    # Add save parameters function to model
+    # Saves the parameters to a file
+    def save_parameters(self, path):
+        
+        # Open a file in the binary-write mode and save parameters to it
+        with open (path, 'wb') as f:
+            pickle.dump(self.get_parameters(), f)
+            
+    # Loads the weights and updates a model instance with them
+    def load_parameters(self, path):
+        # Open file in the binary-read mode,
+        # load weights and update trainable layers
+        with open (path, 'rb' ) as f:
+            self.set_parameters(pickle.load(f))
+            
+    def save(self, path):
+        
+        # Make a deep copy of current model instance
+        model = copy.deepcopy(self)
+        
+        # Reset accumulated values in loss and accuracy objects
+        model.loss.new_pass()
+        model.accuracy.new_pass()
+        
+        # Remove data from the input layer and gradients from the loss object
+        model.input_layer.__dict__.pop('output' , None)
+        model.loss.__dict__.pop('dinputs', None)
+        
+        # For each layer remove inputs, output and dinputs properties
+        for layer in model.layers:
+            for property in [ 'inputs', 'output', 'dinputs', 'dweights', 'dbiases']:
+                layer.__dict__.pop( property , None )
+        
+        # Open a file in the binary-write mode and save the model
+        with open (path, 'wb' ) as f:
+            pickle.dump(model, f)
+            
+    # Loads and returns a model
+    @staticmethod #create a model object without first needing to instantiate a model object
+    def load(path):
+        
+        # Open file in the binary-read mode, load a model
+        with open (path, 'rb' ) as f:
+            model = pickle.load(f)
+            
+        # Return a model
+        return model
             
 # Input "Layer"
 class Layer_Input:
@@ -1054,51 +1103,3 @@ class Accuracy_Categorical(Accuracy):
 """""""""""""""""""""""""""""""""""
 Model Saving and Loading
 """""""""""""""""""""""""""""""""""
-
-# Add save parameters function to model
-# Saves the parameters to a file
-def save_parameters(self, path):
-    
-    # Open a file in the binary-write mode and save parameters to it
-    with open (path, 'wb') as f:
-        pickle.dump(self.get_parameters(), f)
-        
-# Loads the weights and updates a model instance with them
-def load_parameters(self, path):
-    # Open file in the binary-read mode,
-    # load weights and update trainable layers
-    with open (path, 'rb' ) as f:
-        self.set_parameters(pickle.load(f))
-        
-def save(self, path):
-    
-    # Make a deep copy of current model instance
-    model = copy.deepcopy(self)
-    
-    # Reset accumulated values in loss and accuracy objects
-    model.loss.new_pass()
-    model.accuracy.new_pass()
-    
-    # Remove data from the input layer and gradients from the loss object
-    model.input_layer.__dict__.pop('output' , None)
-    model.loss.__dict__.pop('dinputs', None)
-    
-    # For each layer remove inputs, output and dinputs properties
-    for layer in model.layers:
-        for property in [ 'inputs', 'output', 'dinputs', 'dweights', 'dbiases']:
-            layer.__dict__.pop( property , None )
-    
-    # Open a file in the binary-write mode and save the model
-    with open (path, 'wb' ) as f:
-        pickle.dump(model, f)
-        
-# Loads and returns a model
-@staticmethod #create a model object without first needing to instantiate a model object
-def load(path):
-    
-    # Open file in the binary-read mode, load a model
-    with open (path, 'rb' ) as f:
-        model = pickle.load(f)
-        
-    # Return a model
-    return model
