@@ -817,23 +817,23 @@ class Model :
                             f'reg_loss: {regularization_loss :.3f}), ' +
                             f'lr: {self.optimizer.current_learning_rate}')
                     
-                # Get and print epoch loss and accuracy
-                epoch_data_loss, epoch_regularization_loss = self.loss.calculate_accumulated(
-                    include_regularization = True)
-                
-                epoch_loss = epoch_data_loss + epoch_regularization_loss
-                epoch_accuracy = self.accuracy.calculate_accumulated()
-                
-                print ( f'training, ' +
-                        f'acc: {epoch_accuracy :.3f}, ' +
-                        f'loss: {epoch_loss :.3f} (' +
-                        f'data_loss: {epoch_data_loss :.3f}, ' +
-                        f'reg_loss: {epoch_regularization_loss :.3f} ), ' +
-                        f'lr: {self.optimizer.current_learning_rate}' )
+            # Get and print epoch loss and accuracy
+            epoch_data_loss, epoch_regularization_loss = self.loss.calculate_accumulated(
+                include_regularization = True)
+            
+            epoch_loss = epoch_data_loss + epoch_regularization_loss
+            epoch_accuracy = self.accuracy.calculate_accumulated()
+            
+            print ( f'training, ' +
+                    f'acc: {epoch_accuracy :.3f}, ' +
+                    f'loss: {epoch_loss :.3f} (' +
+                    f'data_loss: {epoch_data_loss :.3f}, ' +
+                    f'reg_loss: {epoch_regularization_loss :.3f} ), ' +
+                    f'lr: {self.optimizer.current_learning_rate}' )
                     
-                # If there is the validation data
-                if validation_data is not None:
-                    self.evaluate(*validation_data, batch_size=batch_size)
+            # If there is the validation data
+            if validation_data is not None:
+                self.evaluate(*validation_data, batch_size=batch_size)
                     
     # Predicts on the samples
     def predict(self , X , *, batch_size = None):
